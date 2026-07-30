@@ -13,6 +13,7 @@ import type { components, paths } from './tlmc-schema'
 
 export type LocalizedField = components['schemas']['LocalizedField']
 export type OriginalWork = components['schemas']['OriginalWorkReadDto']
+export type OriginalSong = components['schemas']['OriginalSongReadDto']
 export type TrackWithContext = components['schemas']['TrackWithContext']
 
 function client() {
@@ -23,6 +24,24 @@ function client() {
 
 async function getOriginalWorks() {
   const { data } = await client().GET('/api/source/work')
+  return data
+}
+
+async function getOriginalWork(id: string) {
+  const { data } = await client().GET('/api/source/work/{id}', {
+    params: { path: { id } },
+  })
+  return data
+}
+
+async function getArrangements(
+  songId: string,
+  cursor?: string,
+  limit?: number,
+) {
+  const { data } = await client().GET('/api/source/song/{id}/arrangements', {
+    params: { path: { id: songId }, query: { cursor, limit } },
+  })
   return data
 }
 
@@ -57,5 +76,7 @@ async function filterTracks({
 
 export const tlmc = {
   getOriginalWorks,
+  getOriginalWork,
+  getArrangements,
   filterTracks,
 }

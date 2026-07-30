@@ -834,6 +834,14 @@
     "basedOn": "Audio-similar to {{title}}",
     "nothingPlaying": "Play anything and similarity radio will appear here.",
     "byGame": "Explore by game",
-    "byEra": "Explore by era"
+    "byEra": "Explore by era",
+    "musicRoom": "Music Room",
+    "arrangements": "Arrangements",
+    "arrangementsOf": "Arrangements of {{title}}",
+    "playAll": "Play all",
+    "shuffleAll": "Shuffle all",
+    "loadMore": "Load more",
+    "radio": "Radio",
+    "themes": "{{count}} themes"
   }
 }

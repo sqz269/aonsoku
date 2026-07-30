@@ -40,6 +40,8 @@ const Radios = lazy(() => import('@/app/pages/radios/radios-list'))
 const SongList = lazy(() => import('@/app/pages/songs/songlist'))
 const Home = lazy(() => import('@/app/pages/home'))
 const ExplorePage = lazy(() => import('@/app/pages/explore/page'))
+const ExploreGamePage = lazy(() => import('@/app/pages/explore/game'))
+const ExploreSongPage = lazy(() => import('@/app/pages/explore/song'))
 const GenresList = lazy(() => import('@/app/pages/genres/list'))
 const GenrePage = lazy(() => import('@/app/pages/genres/genre'))
 
@@ -228,6 +230,26 @@ export const router = createHashRouter([
         element: (
           <Suspense fallback={<HomeFallback />}>
             <ExplorePage />
+          </Suspense>
+        ),
+      },
+      {
+        id: 'explore-game',
+        path: ROUTES.EXPLORE_GAME.PATH,
+        errorElement: <ErrorPage />,
+        element: (
+          <Suspense fallback={<HomeFallback />}>
+            <ExploreGamePage />
+          </Suspense>
+        ),
+      },
+      {
+        id: 'explore-song',
+        path: ROUTES.EXPLORE_SONG.PATH,
+        errorElement: <ErrorPage />,
+        element: (
+          <Suspense fallback={<HomeFallback />}>
+            <ExploreSongPage />
           </Suspense>
         ),
       },

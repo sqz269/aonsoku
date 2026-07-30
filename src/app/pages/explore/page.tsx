@@ -8,12 +8,14 @@ import {
 } from 'lucide-react'
 import { memo, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { tlmc } from '@/api/tlmcClient'
 import { ShadowHeader } from '@/app/components/album/shadow-header'
 import { HeaderTitle } from '@/app/components/header-title'
 import ListWrapper from '@/app/components/list-wrapper'
 import { Button } from '@/app/components/ui/button'
 import { useExploreRadio } from '@/app/hooks/use-explore'
+import { ROUTES } from '@/routes/routesList'
 import { usePlayerStore } from '@/store/player.store'
 
 const MemoShadowHeader = memo(ShadowHeader)
@@ -103,6 +105,52 @@ function RadioTile({
   )
 }
 
+// Navigate-first tile: the body links into the Music Room; the corner button
+// is the radio affordance. Games are browse units, themes are listening units.
+function NavRadioTile({
+  title,
+  subtitle,
+  to,
+  loading,
+  onPlay,
+}: {
+  title: string
+  subtitle?: string
+  to: string
+  loading: boolean
+  onPlay: () => void
+}) {
+  return (
+    <div className="relative">
+      <Link
+        to={to}
+        className="flex w-full items-center rounded-lg border bg-background-foreground p-3 pr-14 transition-colors hover:border-primary"
+      >
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium">{title}</span>
+          {subtitle && (
+            <span className="block truncate text-xs text-muted-foreground">
+              {subtitle}
+            </span>
+          )}
+        </span>
+      </Link>
+      <button
+        type="button"
+        onClick={onPlay}
+        disabled={loading}
+        className="absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-accent transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-60"
+      >
+        {loading ? (
+          <Loader2Icon className="size-4 animate-spin" />
+        ) : (
+          <PlayIcon className="size-4 fill-current" />
+        )}
+      </button>
+    </div>
+  )
+}
+
 export default function ExplorePage() {
   const { t } = useTranslation()
   const { pending, playRandom, playSimilar, playGameRadio, playEraRadio } =
@@ -172,10 +220,11 @@ export default function ExplorePage() {
         </SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {games.map((work) => (
-            <RadioTile
+            <NavRadioTile
               key={work.id}
               title={work.short_name.default}
               subtitle={work.full_name.en ?? work.full_name.default}
+              to={ROUTES.EXPLORE_GAME.PAGE(work.id ?? '')}
               loading={pending === `game-${work.id}`}
               onPlay={() => playGameRadio(work.id, work.short_name.default)}
             />

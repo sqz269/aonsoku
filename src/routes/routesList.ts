@@ -74,10 +74,22 @@ const GENRE = {
   PATH: `${LIBRARY.GENRES}/:genreName`,
 }
 
+const EXPLORE_GAME = {
+  PAGE: (workId: string) => `${LIBRARY.EXPLORE}/game/${workId}`,
+  PATH: `${LIBRARY.EXPLORE}/game/:workId`,
+}
+
+const EXPLORE_SONG = {
+  PAGE: (songId: string) => `${LIBRARY.EXPLORE}/song/${songId}`,
+  PATH: `${LIBRARY.EXPLORE}/song/:songId`,
+}
+
 const SERVER_CONFIG = '/server-config'
 
 export const ROUTES = {
   LIBRARY,
+  EXPLORE_GAME,
+  EXPLORE_SONG,
   ARTIST,
   ALBUM,
   ALBUMS,

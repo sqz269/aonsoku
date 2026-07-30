@@ -102,6 +102,12 @@ export function useExploreRadio() {
     )
   }
 
+  async function playSongRadio(songId: string, name: string) {
+    await playFromNativeTracks(`song-${songId}`, name, (cursor) =>
+      tlmc.getArrangements(songId, cursor, PAGE_LIMIT),
+    )
+  }
+
   async function playEraRadio(
     id: string,
     name: string,
@@ -118,5 +124,12 @@ export function useExploreRadio() {
     )
   }
 
-  return { pending, playRandom, playSimilar, playGameRadio, playEraRadio }
+  return {
+    pending,
+    playRandom,
+    playSimilar,
+    playGameRadio,
+    playSongRadio,
+    playEraRadio,
+  }
 }
