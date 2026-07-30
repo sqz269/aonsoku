@@ -168,6 +168,7 @@ export default function ExploreMapPage() {
 
   // Match whatever the active theme paints behind the app — parsing the
   // computed color beats hardcoding a light/dark split across ~20 themes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: theme is the re-run trigger; the value is read from the DOM
   useEffect(() => {
     const channels = getComputedStyle(document.body)
       .backgroundColor.match(/\d+(\.\d+)?/g)
