@@ -1912,6 +1912,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/music/track/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    v?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TrackMapResponseDto"];
+                        "application/json": components["schemas"]["TrackMapResponseDto"];
+                        "text/json": components["schemas"]["TrackMapResponseDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/music/track/{id}/similar": {
         parameters: {
             query?: never;
@@ -2479,6 +2518,23 @@ export interface components {
             duration?: string | null;
             has_media?: boolean;
             has_lyrics?: boolean;
+        };
+        TrackMapResponseDto: {
+            /** Format: int32 */
+            count?: number;
+            model?: string | null;
+            works?: components["schemas"]["TrackMapWorkDto"][] | null;
+            ids?: string[] | null;
+            x?: number[] | null;
+            y?: number[] | null;
+            cluster?: number[] | null;
+            year?: number[] | null;
+            work?: number[] | null;
+        };
+        TrackMapWorkDto: {
+            /** @example work_00000000000000000000000000 */
+            id?: string;
+            short_name?: components["schemas"]["LocalizedField"];
         };
         TrackOriginalsWriteDto: {
             song_external_keys: string[] | null;

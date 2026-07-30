@@ -15,11 +15,30 @@ export type LocalizedField = components['schemas']['LocalizedField']
 export type OriginalWork = components['schemas']['OriginalWorkReadDto']
 export type OriginalSong = components['schemas']['OriginalSongReadDto']
 export type TrackWithContext = components['schemas']['TrackWithContext']
+export type TrackRead = components['schemas']['TrackReadDto']
+export type TrackMapResponse = components['schemas']['TrackMapResponseDto']
 
 function client() {
   return createClient<paths>({
     baseUrl: useAppStore.getState().data.url ?? '',
   })
+}
+
+async function getTrack(id: string) {
+  const { data } = await client().GET('/api/music/track/{id}', {
+    params: { path: { id } },
+  })
+  return data
+}
+
+// ~10MB of parallel arrays for the whole library — fetch once, cache forever.
+// The v token buckets the CDN cache by UTC day so a stale edge entry (or an
+// ETL reload) never pins yesterday's map for longer than that.
+async function getTrackMap() {
+  const { data } = await client().GET('/api/music/track/map', {
+    params: { query: { v: new Date().toISOString().slice(0, 10) } },
+  })
+  return data
 }
 
 async function getOriginalWorks() {
@@ -75,6 +94,8 @@ async function filterTracks({
 }
 
 export const tlmc = {
+  getTrack,
+  getTrackMap,
   getOriginalWorks,
   getOriginalWork,
   getArrangements,

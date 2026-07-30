@@ -3,6 +3,7 @@ import {
   CalendarRangeIcon,
   Gamepad2Icon,
   Loader2Icon,
+  MapIcon,
   PlayIcon,
   SparklesIcon,
 } from 'lucide-react'
@@ -194,6 +195,23 @@ export default function ExplorePage() {
             </p>
           </div>
         </div>
+
+        <Link
+          to={ROUTES.EXPLORE_MAP.PAGE}
+          className="mt-4 flex items-center gap-5 rounded-xl border bg-background-foreground p-6 transition-colors hover:border-primary"
+        >
+          <span className="flex size-14 flex-none items-center justify-center rounded-full bg-accent">
+            <MapIcon className="size-6" />
+          </span>
+          <span>
+            <span className="block text-lg font-semibold">
+              {t('explore.map.title')}
+            </span>
+            <span className="block text-sm text-muted-foreground">
+              {t('explore.map.tileSubtitle')}
+            </span>
+          </span>
+        </Link>
 
         <SectionTitle>
           <SparklesIcon className="mr-1 inline size-3.5" />

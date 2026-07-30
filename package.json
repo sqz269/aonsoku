@@ -102,6 +102,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.4",
     "react-toastify": "^10.0.6",
+    "regl-scatterplot": "^1.16.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "standardized-audio-context": "^25.3.77",

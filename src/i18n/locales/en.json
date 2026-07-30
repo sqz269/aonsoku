@@ -842,6 +842,19 @@
     "shuffleAll": "Shuffle all",
     "loadMore": "Load more",
     "radio": "Radio",
-    "themes": "{{count}} themes"
+    "themes": "{{count}} themes",
+    "map": {
+      "title": "The Map",
+      "tileSubtitle": "Every track as one point — closer sounds alike. Click anywhere and listen.",
+      "hint": "Click a point to hear it. Shift-drag or long-press to lasso a region into a queue.",
+      "cluster": "Sound",
+      "era": "Era",
+      "game": "Game",
+      "loading": "Loading the library…",
+      "starting": "Starting playback…",
+      "selected": "{{count}} tracks",
+      "playSelection": "Play {{count}}",
+      "clear": "Clear"
+    }
   }
 }

@@ -212,6 +212,9 @@ importers:
       react-toastify:
         specifier: ^10.0.6
         version: 10.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      regl-scatterplot:
+        specifier: ^1.16.0
+        version: 1.16.0(pub-sub-es@3.0.0)(regl@2.1.1)
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
@@ -912,6 +915,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@flekschas/utils@0.33.0':
+    resolution: {integrity: sha512-THnZZqtQ5me5kgF9xzI0oYJ8D+524kKXKCUJErAmlT8pfw2iTwiyPDS8f3SqrY9Y7M8zNY2dGME+JBUpKypEqg==}
 
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
@@ -2190,6 +2196,11 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
+  camera-2d-simple@3.0.0:
+    resolution: {integrity: sha512-hBeuUeerQ2Repi/61PGyFkuJ9jt6IKAny7pjQo2w8/8uZh+RKvNLZQy4xbQeDH8FrlnFxAJDjyM4/yuLdOV5vQ==}
+    peerDependencies:
+      gl-matrix: ~3.3.0
+
   caniuse-lite@1.0.30001710:
     resolution: {integrity: sha512-B5C0I0UmaGqHgo5FuqJ7hBd4L57A4dDD+Xi+XX1nXOoxGeDdY4Ko38qJYOyqznBVJEqON5p8P1x5zRR3+rsnxA==}
 
@@ -2470,6 +2481,11 @@ packages:
     os: [darwin]
     hasBin: true
 
+  dom-2d-camera@2.2.6:
+    resolution: {integrity: sha512-HWfV26qjCfpOHa6X0PI1ZyZDhowk6skEs5f7aOwgewuJSP6IgPcK694ImYIOMGnDYK4vC4/Etsi26WpbJtS2vQ==}
+    peerDependencies:
+      gl-matrix: ^3.3.0
+
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
 
@@ -2498,6 +2514,9 @@ packages:
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
+
+  earcut@3.2.3:
+    resolution: {integrity: sha512-vnS4AVwp1KHAF13i1vp1/2D5evWy3k5u/iW/B81QVsUZtV8cv2tU0b2VNFlqvh4kYwrFMDdjPCfAmfyJW9y14Q==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -2802,6 +2821,9 @@ packages:
 
   getpass@0.1.7:
     resolution: {integrity: sha512-0fzj9JxOLfJ+XGLhR8ze3unN0KZCgZwiSSDz168VERjK8Wl8kVSdcu2kspd4s4wtAa1y/qrVRiAA0WclVsu0ng==}
+
+  gl-matrix@3.4.4:
+    resolution: {integrity: sha512-latSnyDNt/8zYUB6VIJ6PCh2jBjJX6gnDsoCZ7LyW7GkqrD51EWwa9qCoGixj8YqBtETQK/xY7OmpTF8xz1DdQ==}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -3758,6 +3780,9 @@ packages:
   proxy-from-env@1.0.0:
     resolution: {integrity: sha512-F2JHgJQ1iqwnHDcQjVBsq3n/uoaFL+iPW/eAeL7kVxy/2RrWaN4WroKjjvbsoRtv0ftelNyC01bjRhn/bhcf4A==}
 
+  pub-sub-es@3.0.0:
+    resolution: {integrity: sha512-pf+6yCPsOfvDMru2LnsqdKSN8XQyF5HZzmEoKBvjMk4TILMUQiq1vxI6rC92T9ErY06sLXBmC1p7JGNFVB1pUQ==}
+
   pump@3.0.2:
     resolution: {integrity: sha512-tUPXtzlGM8FE3P0ZL6DVs/3P58k9nk8/jZeQCurTJylQA8qFYzHFfhBJkuqyE0FifOsQ0uKWekiZ5g8wtr28cw==}
 
@@ -3932,6 +3957,21 @@ packages:
   register-scheme@https://codeload.github.com/devsnek/node-register-scheme/tar.gz/e7cc9a63a1f512565da44cb57316d9fb10750e17:
     resolution: {gitHosted: true, tarball: https://codeload.github.com/devsnek/node-register-scheme/tar.gz/e7cc9a63a1f512565da44cb57316d9fb10750e17}
     version: 0.0.2
+
+  regl-line@1.1.1:
+    resolution: {integrity: sha512-IKcyiZq+nQg7x3mEmxf9kImM9CzmEyZDhCCfas2xVpsoiDJFEyILsuocD1G4dSXA/nC39za9OBw4FzYEgWNiUg==}
+    peerDependencies:
+      regl: ^2.1.0
+
+  regl-scatterplot@1.16.0:
+    resolution: {integrity: sha512-LSNRzihkLgaSEALZv95+w02nX1c6slJJahqHqMNY0YOkE3L6Bk1e38GJaGatW2w8PlB1tOdvq3Cj0tPPrBhpsA==}
+    engines: {node: '>=20.0.0', npm: '>=7.0.0'}
+    peerDependencies:
+      pub-sub-es: ~3.0.0
+      regl: ~2.1.1
+
+  regl@2.1.1:
+    resolution: {integrity: sha512-+IOGrxl3FZ8ZM9ixCWQZzFRiRn7Rzn9bu3iFHwg/yz4tlOUQgbO4PHLgG+1ZT60zcIV8tief6Qrmyl8qcoJP0g==}
 
   rehype-raw@7.0.0:
     resolution: {integrity: sha512-/aE8hCfKlQeA8LmyeyQvQF3eBiLRGNlfBJEvWH7ivp9sBqs7TNqBL5X3v157rM4IFETqDnIOO+z5M/biZbo9Ww==}
@@ -5201,6 +5241,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.1':
     optional: true
+
+  '@flekschas/utils@0.33.0': {}
 
   '@floating-ui/core@1.7.3':
     dependencies:
@@ -6513,6 +6555,10 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
+  camera-2d-simple@3.0.0(gl-matrix@3.4.4):
+    dependencies:
+      gl-matrix: 3.4.4
+
   caniuse-lite@1.0.30001710: {}
 
   caniuse-lite@1.0.30001799: {}
@@ -6840,6 +6886,11 @@ snapshots:
       verror: 1.10.1
     optional: true
 
+  dom-2d-camera@2.2.6(gl-matrix@3.4.4):
+    dependencies:
+      camera-2d-simple: 3.0.0(gl-matrix@3.4.4)
+      gl-matrix: 3.4.4
+
   dom-serializer@2.0.0:
     dependencies:
       domelementtype: 2.3.0
@@ -6873,6 +6924,8 @@ snapshots:
       call-bind-apply-helpers: 1.0.2
       es-errors: 1.3.0
       gopd: 1.2.0
+
+  earcut@3.2.3: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -7264,6 +7317,8 @@ snapshots:
   getpass@0.1.7:
     dependencies:
       assert-plus: 1.0.0
+
+  gl-matrix@3.4.4: {}
 
   glob-parent@5.1.2:
     dependencies:
@@ -8426,6 +8481,8 @@ snapshots:
 
   proxy-from-env@1.0.0: {}
 
+  pub-sub-es@3.0.0: {}
+
   pump@3.0.2:
     dependencies:
       end-of-stream: 1.4.4
@@ -8600,6 +8657,23 @@ snapshots:
       bindings: 1.5.0
       node-addon-api: 1.7.2
     optional: true
+
+  regl-line@1.1.1(regl@2.1.1):
+    dependencies:
+      gl-matrix: 3.4.4
+      regl: 2.1.1
+
+  regl-scatterplot@1.16.0(pub-sub-es@3.0.0)(regl@2.1.1):
+    dependencies:
+      '@flekschas/utils': 0.33.0
+      dom-2d-camera: 2.2.6(gl-matrix@3.4.4)
+      earcut: 3.2.3
+      gl-matrix: 3.4.4
+      pub-sub-es: 3.0.0
+      regl: 2.1.1
+      regl-line: 1.1.1(regl@2.1.1)
+
+  regl@2.1.1: {}
 
   rehype-raw@7.0.0:
     dependencies:
