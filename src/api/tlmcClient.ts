@@ -1,66 +1,29 @@
+import createClient from 'openapi-fetch'
 import { useAppStore } from '@/store/app.store'
+import type { components, paths } from './tlmc-schema'
 
-// Client for the TLMC native v6 API (/api/*), which lives on the same origin
-// as the Subsonic facade (/rest/*). The whole catalogue is anonymous-readable,
-// so no auth params are attached. Wire shapes are snake_case.
+// Typed client for the TLMC native v6 API (/api/*), which lives on the same
+// origin as the Subsonic facade (/rest/*). The whole catalogue is
+// anonymous-readable, so no auth is attached.
+//
+// Types come from the backend's own OpenAPI document. Regenerate after
+// backend contract changes with:
+//   pnpm exec openapi-typescript https://tlmc.marisad.me/swagger/v1/swagger.json \
+//     -o src/api/tlmc-schema.d.ts
 
-export interface LocalizedField {
-  default: string
-  en?: string | null
-  zh?: string | null
-  jp?: string | null
-}
+export type LocalizedField = components['schemas']['LocalizedField']
+export type OriginalWork = components['schemas']['OriginalWorkReadDto']
+export type TrackWithContext = components['schemas']['TrackWithContext']
 
-export interface OriginalWork {
-  id: string
-  external_key: string
-  work_type: string
-  full_name: LocalizedField
-  short_name: LocalizedField
-}
-
-export interface TrackWithContext {
-  track: {
-    id: string
-    track_number: number
-    name: LocalizedField
-    duration: string | null
-    has_media: boolean
-    has_lyrics: boolean
-  }
-  release: {
-    id: string
-    name: LocalizedField
-  }
-  artwork_id: string | null
-  circles: { id: string; name: string }[]
-}
-
-export interface CursorPage<T> {
-  items: T[]
-  next: string | null
-}
-
-async function tlmcFetch<T>(
-  path: string,
-  query?: Record<string, string | undefined>,
-): Promise<T | undefined> {
-  const url = new URL(`${useAppStore.getState().data.url}/api${path}`)
-  for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined) url.searchParams.set(key, value)
-  }
-
-  try {
-    const response = await fetch(url)
-    if (!response.ok) return undefined
-    return (await response.json()) as T
-  } catch {
-    return undefined
-  }
+function client() {
+  return createClient<paths>({
+    baseUrl: useAppStore.getState().data.url ?? '',
+  })
 }
 
 async function getOriginalWorks() {
-  return tlmcFetch<OriginalWork[]>('/source/work')
+  const { data } = await client().GET('/api/source/work')
+  return data
 }
 
 interface FilterTracksParams {
@@ -78,13 +41,18 @@ async function filterTracks({
   cursor,
   limit,
 }: FilterTracksParams) {
-  return tlmcFetch<CursorPage<TrackWithContext>>('/music/track/filter', {
-    original_work_id: originalWorkId,
-    release_date_from: releaseDateFrom,
-    release_date_to: releaseDateTo,
-    cursor,
-    limit: limit?.toString(),
+  const { data } = await client().GET('/api/music/track/filter', {
+    params: {
+      query: {
+        original_work_id: originalWorkId ? [originalWorkId] : undefined,
+        release_date_from: releaseDateFrom,
+        release_date_to: releaseDateTo,
+        cursor,
+        limit,
+      },
+    },
   })
+  return data
 }
 
 export const tlmc = {
