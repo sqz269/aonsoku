@@ -18,7 +18,8 @@
     "radios": "Radios",
     "podcasts": "Podcasts",
     "genres": "Genres",
-    "emptyPlaylist": "No playlists created yet"
+    "emptyPlaylist": "No playlists created yet",
+    "explore": "Explore"
   },
   "menu": {
     "language": "Language",
@@ -824,5 +825,15 @@
       "y": "1 year",
       "yy": "%d years"
     }
+  },
+  "explore": {
+    "playSomething": "Play something",
+    "playSomethingDescription": "Seeded radio over the whole collection — you'll never know if you like it until you hear it.",
+    "fromCurrent": "From what's playing",
+    "moreLikeThis": "More like this",
+    "basedOn": "Audio-similar to {{title}}",
+    "nothingPlaying": "Play anything and similarity radio will appear here.",
+    "byGame": "Explore by game",
+    "byEra": "Explore by era"
   }
 }

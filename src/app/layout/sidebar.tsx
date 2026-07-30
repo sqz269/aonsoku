@@ -1,4 +1,5 @@
 import {
+  CompassIcon,
   HeartIcon,
   HomeIcon,
   LibraryIcon,
@@ -17,6 +18,7 @@ const Mic2 = memo(Mic2Icon)
 const Music2 = memo(Music2Icon)
 const Radio = memo(RadioIcon)
 const Home = memo(HomeIcon)
+const Compass = memo(CompassIcon)
 const Library = memo(LibraryIcon)
 const Podcast = memo(PodcastIcon)
 const Heart = memo(HeartIcon)
@@ -31,6 +33,7 @@ export interface ISidebarItem {
 
 export enum SidebarItems {
   Home = 'home',
+  Explore = 'explore',
   Artists = 'artists',
   Songs = 'songs',
   Albums = 'albums',
@@ -49,6 +52,12 @@ export const mainNavItems = [
     title: 'sidebar.home',
     route: ROUTES.LIBRARY.HOME,
     icon: Home,
+  },
+  {
+    id: SidebarItems.Explore,
+    title: 'sidebar.explore',
+    route: ROUTES.LIBRARY.EXPLORE,
+    icon: Compass,
   },
 ]
 

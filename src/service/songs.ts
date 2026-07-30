@@ -2,6 +2,7 @@ import { httpClient } from '@/api/httpClient'
 import {
   FavoritesResponse,
   GetSongResponse,
+  ISong,
   RandomSongsResponse,
   TopSongsResponse,
 } from '@/types/responses/song'
@@ -75,10 +76,29 @@ async function getSong(id: string) {
   return response?.data.song
 }
 
+interface SimilarSongsResponse {
+  similarSongs2: {
+    song?: ISong[]
+  }
+}
+
+async function getSimilarSongs(id: string, count = 50) {
+  const response = await httpClient<SimilarSongsResponse>('/getSimilarSongs2', {
+    method: 'GET',
+    query: {
+      id,
+      count: count.toString(),
+    },
+  })
+
+  return response?.data.similarSongs2?.song ?? []
+}
+
 export const songs = {
   getAllSongs,
   getFavoriteSongs,
   getRandomSongs,
   getTopSongs,
   getSong,
+  getSimilarSongs,
 }
