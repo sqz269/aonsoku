@@ -1,0 +1,11 @@
+// Cloudflare Workers static-assets deployment: `pnpm build && wrangler deploy`.
+// Assets-only (no worker script): the app is a hash-routed SPA whose runtime
+// config ships as public/env-config.js, so the edge only ever serves files.
+{
+  "name": "aonsoku",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
