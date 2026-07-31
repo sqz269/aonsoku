@@ -2526,12 +2526,18 @@ export interface components {
             /** Format: int32 */
             count?: number;
         };
+        TrackMapClusterDto: {
+            /** Format: int32 */
+            id?: number;
+            name?: string | null;
+        };
         TrackMapResponseDto: {
             /** Format: int32 */
             count?: number;
             model?: string | null;
             works?: components["schemas"]["TrackMapWorkDto"][] | null;
             circles?: components["schemas"]["TrackMapCircleDto"][] | null;
+            clusters?: components["schemas"]["TrackMapClusterDto"][] | null;
             ids?: string[] | null;
             x?: number[] | null;
             y?: number[] | null;

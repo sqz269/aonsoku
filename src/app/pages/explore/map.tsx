@@ -293,6 +293,18 @@ export default function ExploreMapPage() {
     }
   }, [theme, plotReady, drawOverlay])
 
+  const clusterNames = useMemo(() => {
+    const names = new Map<number, string>()
+    for (const entry of map?.clusters ?? []) {
+      if (entry.id != null && entry.name) names.set(entry.id, entry.name)
+    }
+    return names
+  }, [map])
+  const clusterCount = useMemo(
+    () => (map?.cluster ?? []).reduce((acc, c) => Math.max(acc, c + 1), 0),
+    [map],
+  )
+
   const circles = useMemo(() => map?.circles ?? [], [map])
   const selectedCircleEntry =
     selectedCircle != null ? (circles[selectedCircle] ?? null) : null
@@ -534,6 +546,24 @@ export default function ExploreMapPage() {
             )}
           </div>
         </div>
+
+        {colorMode === 'cluster' && clusterNames.size > 0 && (
+          <div className="pointer-events-auto max-h-72 w-72 overflow-y-auto rounded-lg border bg-background/80 p-2 backdrop-blur">
+            {Array.from({ length: clusterCount }, (_, c) => (
+              <div key={c} className="flex items-center gap-2 px-1 py-0.5">
+                <span
+                  className="size-2.5 flex-none rounded-full"
+                  style={{
+                    backgroundColor: categoricalPalette(clusterCount)[c],
+                  }}
+                />
+                <span className="truncate text-xs">
+                  {clusterNames.get(c) ?? `#${c}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {(isLoading || pending) && (
@@ -587,11 +617,14 @@ export default function ExploreMapPage() {
             {hoverCircles && hoverTrack.release?.name?.default ? ' — ' : ''}
             {hoverTrack.release?.name?.default}
           </p>
-          {map?.year?.[hoverIndex] ? (
-            <p className="text-xs text-muted-foreground">
-              {map.year[hoverIndex]}
-            </p>
-          ) : null}
+          <p className="text-xs text-muted-foreground">
+            {[
+              map?.year?.[hoverIndex] || null,
+              clusterNames.get(map?.cluster?.[hoverIndex] ?? -1) ?? null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
         </div>
       )}
     </div>
