@@ -90,7 +90,7 @@ export default function ExploreSongPage() {
         setSongList(songs, 0, false, {
           id: `explore-song-${songId}`,
           name: title,
-          type: 'songs',
+          type: 'radio',
         })
       }
     } finally {

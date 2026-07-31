@@ -26,6 +26,9 @@ export type PlaybackSourceType =
   | 'artist'
   | 'favourite'
   | 'songs'
+  | 'radio'
+  | 'map'
+  | 'search'
 
 export type PlaybackSource = {
   type: PlaybackSourceType

@@ -482,7 +482,7 @@ export default function ExploreMapPage() {
         setSongList(songs, 0, false, {
           id: 'explore-map',
           name: t('explore.map.title'),
-          type: 'songs',
+          type: 'map',
         })
       }
     } finally {

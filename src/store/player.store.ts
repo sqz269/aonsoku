@@ -6,6 +6,11 @@ import { devtools, persist, subscribeWithSelector } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { shallow } from 'zustand/shallow'
 import { createWithEqualityFn } from 'zustand/traditional'
+import {
+  nativeReportingActive,
+  reportPlay,
+  toPlaySource,
+} from '@/service/playReport'
 import { scrobble } from '@/service/scrobble'
 import { subsonic } from '@/service/subsonic'
 import {
@@ -872,6 +877,20 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               })
             },
             resetAccumulatedTime: () => {
+              // Every transition (new list, next/prev, natural end) zeroes the
+              // counter, which is exactly when the outgoing track's listened
+              // time is final — report it before it is lost. No-op signed out.
+              const { songlist, listenTime, playerState } = get()
+              if (playerState.mediaType === 'song' && songlist.currentSong.id) {
+                reportPlay(
+                  songlist.currentSong.id,
+                  listenTime.accumulated * 1000,
+                  toPlaySource(
+                    playerState.playbackContext.source,
+                    playerState.isShuffleActive,
+                  ),
+                )
+              }
               set((state) => {
                 state.listenTime.accumulated = 0
               })
@@ -1085,7 +1104,9 @@ usePlayerStore.subscribe((state, prevState) => {
   if (progress >= 1 && prevProgress < 1 && !hasSynced) {
     usePlayerStore.getState().actions.setHasSyncedTheCurrentTrack(true)
 
-    scrobble.send(currentSong.id, false)
+    // Signed-in sessions report natively on track transition instead
+    // (Docs/RECOMMENDER.md phase 0) — one client, one reporting path.
+    if (!nativeReportingActive()) scrobble.send(currentSong.id, false)
   }
 
   const timeDelta = progress - prevProgress
@@ -1106,7 +1127,7 @@ usePlayerStore.subscribe((state, prevState) => {
   if (duration > 0 && accumulatedTime >= targetTime && !hasScrobbled) {
     usePlayerStore.getState().actions.setHasScrobbledTheCurrentTrack(true)
 
-    scrobble.send(currentSong.id, true)
+    if (!nativeReportingActive()) scrobble.send(currentSong.id, true)
   }
 })
 

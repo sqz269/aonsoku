@@ -44,7 +44,7 @@ export function useExploreRadio() {
       start(songs, {
         id: 'explore-random',
         name: 'Explore Radio',
-        type: 'songs',
+        type: 'radio',
       })
     } finally {
       setPending(null)
@@ -58,7 +58,7 @@ export function useExploreRadio() {
       start([song, ...similar], {
         id: `explore-similar-${song.id}`,
         name: song.title,
-        type: 'songs',
+        type: 'radio',
       })
     } finally {
       setPending(null)
@@ -90,7 +90,7 @@ export function useExploreRadio() {
         await Promise.all(ids.map((id) => subsonic.songs.getSong(id)))
       ).filter((song): song is ISong => Boolean(song))
 
-      start(songs, { id: key, name, type: 'songs' })
+      start(songs, { id: key, name, type: 'radio' })
     } finally {
       setPending(null)
     }
