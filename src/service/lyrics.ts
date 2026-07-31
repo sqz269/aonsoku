@@ -88,7 +88,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     )
 
     if (response && preferSyncedLyrics) {
-      const { structuredLyrics } = response.data.lyricsList
+      const structuredLyrics = response.data.lyricsList?.structuredLyrics
 
       if (structuredLyrics && structuredLyrics.length > 0) {
         const syncedLyrics = structuredLyrics.find((lyrics) => lyrics.synced)
@@ -100,10 +100,10 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 
           return serverSyncedLyrics
         }
-      }
 
-      // save the plain lyrics retrieved from the server
-      osUnsyncedLyricsFound = osStructuredLyricsToILyric(structuredLyrics[0])
+        // save the plain lyrics retrieved from the server
+        osUnsyncedLyricsFound = osStructuredLyricsToILyric(structuredLyrics[0])
+      }
     }
   }
 
