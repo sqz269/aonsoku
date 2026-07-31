@@ -484,7 +484,10 @@ export default function ExploreMapPage() {
       />
 
       <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-col gap-2">
-        <div className="pointer-events-auto w-72 rounded-lg border bg-background/80 p-3 backdrop-blur">
+        {/* backdrop-blur gives each panel its own stacking context, so the
+            search dropdown's z-index can't escape this card — the card itself
+            must outrank the legend below it. */}
+        <div className="pointer-events-auto relative z-20 w-72 rounded-lg border bg-background/80 p-3 backdrop-blur">
           <h1 className="text-sm font-semibold">{t('explore.map.title')}</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {t('explore.map.hint')}
