@@ -97,17 +97,25 @@ export function buildCircleContours(
     field = ratio
   }
 
-  // Rank thresholds over cells with meaningful mass only — the blur smears a
-  // whisper of density everywhere, and quantiles over that dust would draw
-  // ripple rings across the whole continent.
-  let max = 0
-  for (const v of field) if (v > max) max = v
-  const positive = Array.from(field).filter((v) => v > 0.08 * max)
-  if (positive.length === 0) return { polygons: [], strengths: [] }
-  positive.sort((a, b) => a - b)
+  // Two tail problems meet here: the blur smears a whisper of density
+  // everywhere (quantiles over that dust ring the whole continent), and in
+  // relative mode a few low-mass cells spike the ratio (making anything
+  // "% of max" exclude everything else). Winsorize at p99, then rank
+  // thresholds only over cells that carry real mass on that capped scale.
+  const sorted = Array.from(field)
+    .filter((v) => v > 0)
+    .sort((a, b) => a - b)
+  if (sorted.length === 0) return { polygons: [], strengths: [] }
+  const cap = sorted[Math.min(sorted.length - 1, Math.floor(0.99 * sorted.length))]
+  if (cap <= 0) return { polygons: [], strengths: [] }
+  for (let i = 0; i < field.length; i++) {
+    if (field[i] > cap) field[i] = cap
+  }
+  const meaningful = sorted.filter((v) => v > 0.05 * cap).map((v) => Math.min(v, cap))
+  if (meaningful.length === 0) return { polygons: [], strengths: [] }
   const quantile = (q: number) =>
-    positive[Math.min(positive.length - 1, Math.floor(q * positive.length))]
-  const thresholds = [0.5, 0.68, 0.82, 0.92, 0.98]
+    meaningful[Math.min(meaningful.length - 1, Math.floor(q * meaningful.length))]
+  const thresholds = [0.35, 0.55, 0.72, 0.86, 0.96]
     .map(quantile)
     .filter((v, i, arr) => v > 0 && arr.indexOf(v) === i)
 
