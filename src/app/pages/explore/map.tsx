@@ -17,15 +17,19 @@ import { useTheme } from '@/store/theme.store'
 import { ISong } from '@/types/responses/song'
 
 type Scatterplot = ReturnType<typeof createScatterplot>
-type ColorMode = 'cluster' | 'era' | 'game' | 'circle'
-
-// Distinct colors run out long before 2,698 circles do: the legend arrives
-// largest-first, so the first TOP_CIRCLES get real colors and the tail is muted.
-const TOP_CIRCLES = 48
 
 const QUEUE_CAP = 30
-const ERA_MIN = 2000
-const ERA_MAX = 2026
+
+// One slot color per overlaid circle contour, chosen to stay tellable-apart
+// when territories overlap. Slot count caps how many circles can be compared.
+const CONTOUR_COLORS = [
+  '56, 189, 248',
+  '244, 114, 182',
+  '250, 204, 21',
+  '74, 222, 128',
+  '196, 181, 253',
+  '251, 146, 60',
+]
 
 function hslToHex(h: number, s: number, l: number): string {
   const sat = s / 100
@@ -45,13 +49,6 @@ function hslToHex(h: number, s: number, l: number): string {
 function categoricalPalette(n: number): string[] {
   return Array.from({ length: n }, (_, i) =>
     hslToHex((i * 137.508) % 360, 68, i % 2 === 0 ? 58 : 46),
-  )
-}
-
-function eraPalette(): string[] {
-  const span = ERA_MAX - ERA_MIN
-  return Array.from({ length: span + 1 }, (_, i) =>
-    hslToHex(230 - (i / span) * 230, 72, 55),
   )
 }
 
@@ -78,10 +75,8 @@ export default function ExploreMapPage() {
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const scatterplotRef = useRef<Scatterplot | null>(null)
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const contoursRef = useRef<ContourSet | null>(null)
-  const overlayColorRef = useRef('255, 255, 255')
+  const contoursRef = useRef<Array<{ set: ContourSet; rgb: string }>>([])
 
-  const [colorMode, setColorMode] = useState<ColorMode>('cluster')
   const [selection, setSelection] = useState<number[]>([])
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   const [cursor, setCursor] = useState({ x: 0, y: 0 })
@@ -89,7 +84,11 @@ export default function ExploreMapPage() {
   const [viewportHeight, setViewportHeight] = useState(0)
   const [plotReady, setPlotReady] = useState(false)
   const [circleQuery, setCircleQuery] = useState('')
-  const [selectedCircle, setSelectedCircle] = useState<number | null>(null)
+  // Each overlaid circle keeps the color slot it was given on selection, so
+  // removing one never recolors the others mid-comparison.
+  const [selectedCircles, setSelectedCircles] = useState<
+    Array<{ circle: number; color: number }>
+  >([])
   const [activeClusters, setActiveClusters] = useState<ReadonlySet<number>>(
     new Set(),
   )
@@ -137,33 +136,33 @@ export default function ExploreMapPage() {
 
     const dpr = window.devicePixelRatio || 1
     ctx.clearRect(0, 0, overlay.width / dpr, overlay.height / dpr)
-    const set = contoursRef.current
-    if (!set || set.polygons.length === 0) return
+    if (contoursRef.current.length === 0) return
 
     const xScale = scatterplot.get('xScale')
     const yScale = scatterplot.get('yScale')
     if (!xScale || !yScale) return
 
-    const rgb = overlayColorRef.current
-    set.polygons.forEach((rings, level) => {
-      const strength = set.strengths[level]
-      ctx.beginPath()
-      for (const ring of rings) {
-        ring.forEach(([dataX, dataY], i) => {
-          const px = xScale(dataX)
-          const py = yScale(dataY)
-          if (i === 0) ctx.moveTo(px, py)
-          else ctx.lineTo(px, py)
-        })
-        ctx.closePath()
-      }
-      ctx.fillStyle = `rgba(${rgb}, ${0.03 + 0.07 * strength})`
-      ctx.strokeStyle = `rgba(${rgb}, ${0.3 + 0.5 * strength})`
-      ctx.lineWidth = level === set.polygons.length - 1 ? 1.5 : 1
-      ctx.lineJoin = 'round'
-      ctx.fill()
-      ctx.stroke()
-    })
+    for (const { set, rgb } of contoursRef.current) {
+      set.polygons.forEach((rings, level) => {
+        const strength = set.strengths[level]
+        ctx.beginPath()
+        for (const ring of rings) {
+          ring.forEach(([dataX, dataY], i) => {
+            const px = xScale(dataX)
+            const py = yScale(dataY)
+            if (i === 0) ctx.moveTo(px, py)
+            else ctx.lineTo(px, py)
+          })
+          ctx.closePath()
+        }
+        ctx.fillStyle = `rgba(${rgb}, ${0.03 + 0.06 * strength})`
+        ctx.strokeStyle = `rgba(${rgb}, ${0.35 + 0.45 * strength})`
+        ctx.lineWidth = level === set.polygons.length - 1 ? 1.5 : 1
+        ctx.lineJoin = 'round'
+        ctx.fill()
+        ctx.stroke()
+      })
+    }
   }, [])
 
   // The route renders inside the main scroll area, whose Radix viewport sizes
@@ -234,48 +233,23 @@ export default function ExploreMapPage() {
     }
   }, [hasSize, drawOverlay])
 
-  // (Re)draw whenever the data or the coloring lens changes.
+  // (Re)draw whenever the data changes; points always color by sound family.
   // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
     if (!scatterplot || !map?.x?.length) return
 
-    const {
-      x,
-      y,
-      cluster = [],
-      year = [],
-      work = [],
-      works = [],
-      circle = [],
-    } = map
-    let valueA: number[]
-    let palette: string[]
-    if (colorMode === 'cluster') {
-      const top = cluster.reduce((acc, c) => Math.max(acc, c), 0)
-      valueA = cluster.map((c) => c + 1)
-      palette = [UNKNOWN_COLOR, ...categoricalPalette(top + 1)]
-    } else if (colorMode === 'circle') {
-      valueA = circle.map((c) => (c >= 0 && c < TOP_CIRCLES ? c + 1 : 0))
-      palette = [UNKNOWN_COLOR, ...categoricalPalette(TOP_CIRCLES)]
-    } else if (colorMode === 'era') {
-      valueA = year.map((value) =>
-        value === 0
-          ? 0
-          : Math.min(Math.max(value - ERA_MIN, 0), ERA_MAX - ERA_MIN) + 1,
-      )
-      palette = [UNKNOWN_COLOR, ...eraPalette()]
-    } else {
-      valueA = work.map((w) => w + 1)
-      palette = [UNKNOWN_COLOR, ...categoricalPalette(works.length)]
-    }
+    const { x, y, cluster = [] } = map
+    const top = cluster.reduce((acc, c) => Math.max(acc, c), 0)
+    const valueA = cluster.map((c) => c + 1)
+    const palette = [UNKNOWN_COLOR, ...categoricalPalette(top + 1)]
 
     scatterplot.set({ colorBy: 'valueA', pointColor: palette })
     scatterplot.draw(
       { x: x ?? [], y: y ?? [], valueA },
       { transition: false },
     )
-  }, [map, colorMode, plotReady])
+  }, [map, plotReady])
 
   // Match whatever the active theme paints behind the app — parsing the
   // computed color beats hardcoding a light/dark split across ~20 themes.
@@ -289,12 +263,8 @@ export default function ExploreMapPage() {
       scatterplotRef.current?.set({
         backgroundColor: [channels[0], channels[1], channels[2], 1],
       })
-      const luminance =
-        0.299 * channels[0] + 0.587 * channels[1] + 0.114 * channels[2]
-      overlayColorRef.current = luminance > 0.5 ? '20, 20, 30' : '255, 255, 255'
-      drawOverlay()
     }
-  }, [theme, plotReady, drawOverlay])
+  }, [theme, plotReady])
 
   const clusterNames = useMemo(() => {
     const names = new Map<number, string>()
@@ -309,38 +279,62 @@ export default function ExploreMapPage() {
   )
 
   const circles = useMemo(() => map?.circles ?? [], [map])
-  const selectedCircleEntry =
-    selectedCircle != null ? (circles[selectedCircle] ?? null) : null
   const circleMatches = useMemo(() => {
     const query = circleQuery.trim().toLowerCase()
     if (!query) return []
+    const taken = new Set(selectedCircles.map((s) => s.circle))
     const matches: Array<{ entry: (typeof circles)[number]; index: number }> =
       []
     for (let i = 0; i < circles.length && matches.length < 10; i++) {
+      if (taken.has(i)) continue
       if ((circles[i].name ?? '').toLowerCase().includes(query)) {
         matches.push({ entry: circles[i], index: i })
       }
     }
     return matches
-  }, [circles, circleQuery])
+  }, [circles, circleQuery, selectedCircles])
 
-  // Contours track the picked circle and its density controls; geometry lives
-  // in data space so pan/zoom only ever re-projects.
-  const contourSet = useMemo(() => {
-    if (!map?.x || !map?.y || selectedCircle == null) return null
-    const indices: number[] = []
+  function addCircle(index: number) {
+    setSelectedCircles((current) => {
+      if (current.length >= CONTOUR_COLORS.length) return current
+      const used = new Set(current.map((s) => s.color))
+      let color = 0
+      while (used.has(color)) color++
+      return [...current, { circle: index, color }]
+    })
+  }
+
+  function removeCircle(index: number) {
+    setSelectedCircles((current) => current.filter((s) => s.circle !== index))
+  }
+
+  // Contours track the picked circles and their density controls; geometry
+  // lives in data space so pan/zoom only ever re-projects.
+  const contourSets = useMemo(() => {
+    if (!map?.x || !map?.y || selectedCircles.length === 0) return []
     const circle = map.circle ?? []
+    const byCircle = new Map<number, number[]>(
+      selectedCircles.map((s) => [s.circle, []]),
+    )
     for (let i = 0; i < circle.length; i++) {
-      if (circle[i] === selectedCircle) indices.push(i)
+      byCircle.get(circle[i])?.push(i)
     }
-    if (indices.length === 0) return null
-    return buildCircleContours(map.x, map.y, indices, bandwidth, relative)
-  }, [map, selectedCircle, bandwidth, relative])
+    return selectedCircles.flatMap(({ circle: circleIndex, color }) => {
+      const indices = byCircle.get(circleIndex) ?? []
+      if (indices.length === 0) return []
+      return [
+        {
+          set: buildCircleContours(map.x!, map.y!, indices, bandwidth, relative),
+          rgb: CONTOUR_COLORS[color],
+        },
+      ]
+    })
+  }, [map, selectedCircles, bandwidth, relative])
 
   useEffect(() => {
-    contoursRef.current = contourSet
+    contoursRef.current = contourSets
     drawOverlay()
-  }, [contourSet, drawOverlay])
+  }, [contourSets, drawOverlay])
 
   // New payload (an ETL reload) invalidates the cached library-density field.
   useEffect(() => {
@@ -348,14 +342,7 @@ export default function ExploreMapPage() {
   }, [map])
 
   // Legend rows are layer toggles: an empty set means everything, otherwise
-  // only the chosen families' points survive the filter. Leaving the Sound
-  // lens drops the filter — the other lenses color what the toggles hide.
-  useEffect(() => {
-    if (colorMode !== 'cluster' && activeClusters.size > 0) {
-      setActiveClusters(new Set())
-    }
-  }, [colorMode, activeClusters])
-
+  // only the chosen families' points survive the filter.
   // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
@@ -492,39 +479,39 @@ export default function ExploreMapPage() {
           <p className="mt-0.5 text-xs text-muted-foreground">
             {t('explore.map.hint')}
           </p>
-          <div className="mt-2 flex gap-1">
-            {(['cluster', 'era', 'game', 'circle'] as const).map((mode) => (
-              <Button
-                key={mode}
-                size="sm"
-                variant={colorMode === mode ? 'default' : 'secondary'}
-                className="h-7 px-2 text-xs"
-                onClick={() => setColorMode(mode)}
-              >
-                {t(`explore.map.${mode}`)}
-              </Button>
-            ))}
-          </div>
 
           <div className="mt-3 border-t pt-2">
-            {selectedCircleEntry ? (
-              <div className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                  {selectedCircleEntry.name}
-                </span>
-                <span className="flex-none text-xs tabular-nums text-muted-foreground">
-                  {selectedCircleEntry.count}
-                </span>
-                <button
-                  type="button"
-                  className="flex size-6 flex-none items-center justify-center rounded-full hover:bg-accent"
-                  onClick={() => setSelectedCircle(null)}
+            {selectedCircles.map(({ circle: circleIndex, color }) => {
+              const entry = circles[circleIndex]
+              if (!entry) return null
+              return (
+                <div
+                  key={circleIndex}
+                  className="flex items-center gap-2 py-0.5"
                 >
-                  <XIcon className="size-3.5" />
-                </button>
-              </div>
-            ) : (
-              <div className="relative">
+                  <span
+                    className="size-2.5 flex-none rounded-full"
+                    style={{ backgroundColor: `rgb(${CONTOUR_COLORS[color]})` }}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {entry.name}
+                  </span>
+                  <span className="flex-none text-xs tabular-nums text-muted-foreground">
+                    {entry.count}
+                  </span>
+                  <button
+                    type="button"
+                    className="flex size-6 flex-none items-center justify-center rounded-full hover:bg-accent"
+                    onClick={() => removeCircle(circleIndex)}
+                  >
+                    <XIcon className="size-3.5" />
+                  </button>
+                </div>
+              )
+            })}
+
+            {selectedCircles.length < CONTOUR_COLORS.length && (
+              <div className="relative mt-1">
                 <input
                   value={circleQuery}
                   onChange={(event) => setCircleQuery(event.target.value)}
@@ -539,7 +526,7 @@ export default function ExploreMapPage() {
                         type="button"
                         className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-accent"
                         onClick={() => {
-                          setSelectedCircle(index)
+                          addCircle(index)
                           setCircleQuery('')
                         }}
                       >
@@ -556,7 +543,7 @@ export default function ExploreMapPage() {
               </div>
             )}
 
-            {selectedCircleEntry && (
+            {selectedCircles.length > 0 && (
               <div className="mt-2 flex flex-col gap-1.5">
                 <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                   {t('explore.map.smoothing')}
@@ -586,7 +573,7 @@ export default function ExploreMapPage() {
           </div>
         </div>
 
-        {colorMode === 'cluster' && clusterNames.size > 0 && (
+        {clusterNames.size > 0 && (
           <div className="pointer-events-auto max-h-72 w-72 overflow-y-auto rounded-lg border bg-background/80 p-2 backdrop-blur">
             {activeClusters.size > 0 && (
               <button
