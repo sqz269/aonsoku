@@ -228,8 +228,7 @@ export default function ExploreMapPage() {
       setPlotReady(false)
       scatterplot.destroy()
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: drawOverlay is identity-stable via refs
-  }, [hasSize])
+  }, [hasSize, drawOverlay])
 
   // (Re)draw whenever the data or the coloring lens changes.
   // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
@@ -329,9 +328,10 @@ export default function ExploreMapPage() {
 
   // New payload (an ETL reload) invalidates the cached library-density field.
   useEffect(() => {
-    clearContourCache()
+    if (map) clearContourCache()
   }, [map])
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
     if (!scatterplot) return
