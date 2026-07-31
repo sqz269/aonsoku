@@ -858,7 +858,8 @@
       "starting": "Starting playback…",
       "selected": "{{count}} tracks",
       "playSelection": "Play {{count}}",
-      "clear": "Clear"
+      "clear": "Clear",
+      "showAll": "Show all families"
     }
   }
 }

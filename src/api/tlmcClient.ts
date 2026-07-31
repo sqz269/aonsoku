@@ -32,7 +32,7 @@ async function getTrack(id: string) {
 }
 
 // Bump when a reloaded layout must reach clients before the daily bucket rolls.
-const MAP_CACHE_EPOCH = 4
+const MAP_CACHE_EPOCH = 5
 
 // ~10MB of parallel arrays for the whole library — fetch once, cache forever.
 // The v token buckets the CDN cache by UTC day so a stale edge entry (or an

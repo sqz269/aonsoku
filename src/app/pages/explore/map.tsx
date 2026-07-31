@@ -90,6 +90,9 @@ export default function ExploreMapPage() {
   const [plotReady, setPlotReady] = useState(false)
   const [circleQuery, setCircleQuery] = useState('')
   const [selectedCircle, setSelectedCircle] = useState<number | null>(null)
+  const [activeClusters, setActiveClusters] = useState<ReadonlySet<number>>(
+    new Set(),
+  )
   const [bandwidth, setBandwidth] = useState(4)
   const [relative, setRelative] = useState(true)
 
@@ -344,6 +347,38 @@ export default function ExploreMapPage() {
     if (map) clearContourCache()
   }, [map])
 
+  // Legend rows are layer toggles: an empty set means everything, otherwise
+  // only the chosen families' points survive the filter. Leaving the Sound
+  // lens drops the filter — the other lenses color what the toggles hide.
+  useEffect(() => {
+    if (colorMode !== 'cluster' && activeClusters.size > 0) {
+      setActiveClusters(new Set())
+    }
+  }, [colorMode, activeClusters])
+
+  useEffect(() => {
+    const scatterplot = scatterplotRef.current
+    if (!scatterplot || !map?.cluster) return
+    if (activeClusters.size === 0) {
+      scatterplot.unfilter()
+      return
+    }
+    const indices: number[] = []
+    for (let i = 0; i < map.cluster.length; i++) {
+      if (activeClusters.has(map.cluster[i])) indices.push(i)
+    }
+    scatterplot.filter(indices)
+  }, [activeClusters, map, plotReady])
+
+  function toggleCluster(cluster: number) {
+    setActiveClusters((current) => {
+      const next = new Set(current)
+      if (next.has(cluster)) next.delete(cluster)
+      else next.add(cluster)
+      return next
+    })
+  }
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
@@ -549,19 +584,43 @@ export default function ExploreMapPage() {
 
         {colorMode === 'cluster' && clusterNames.size > 0 && (
           <div className="pointer-events-auto max-h-72 w-72 overflow-y-auto rounded-lg border bg-background/80 p-2 backdrop-blur">
-            {Array.from({ length: clusterCount }, (_, c) => (
-              <div key={c} className="flex items-center gap-2 px-1 py-0.5">
-                <span
-                  className="size-2.5 flex-none rounded-full"
-                  style={{
-                    backgroundColor: categoricalPalette(clusterCount)[c],
-                  }}
-                />
-                <span className="truncate text-xs">
-                  {clusterNames.get(c) ?? `#${c}`}
-                </span>
-              </div>
-            ))}
+            {activeClusters.size > 0 && (
+              <button
+                type="button"
+                className="mb-1 w-full rounded px-1 py-0.5 text-left text-xs font-medium text-primary hover:bg-accent"
+                onClick={() => setActiveClusters(new Set())}
+              >
+                {t('explore.map.showAll')}
+              </button>
+            )}
+            {Array.from({ length: clusterCount }, (_, c) => {
+              const dimmed =
+                activeClusters.size > 0 && !activeClusters.has(c)
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => toggleCluster(c)}
+                  className={`flex w-full items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-accent ${
+                    dimmed ? 'opacity-40' : ''
+                  }`}
+                >
+                  <span
+                    className="size-2.5 flex-none rounded-full"
+                    style={{
+                      backgroundColor: categoricalPalette(clusterCount)[c],
+                    }}
+                  />
+                  <span
+                    className={`truncate text-xs ${
+                      activeClusters.has(c) ? 'font-semibold' : ''
+                    }`}
+                  >
+                    {clusterNames.get(c) ?? `#${c}`}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
