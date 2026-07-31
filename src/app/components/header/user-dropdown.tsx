@@ -1,4 +1,4 @@
-import { Info, Keyboard, LogOut, User } from 'lucide-react'
+import { Info, Keyboard, LogIn, LogOut, User } from 'lucide-react'
 import { useState } from 'react'
 import { Fragment } from 'react/jsx-runtime'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -17,12 +17,13 @@ import {
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu'
 import { LogoutObserver } from '@/app/observers/logout-observer'
+import { beginTlmcLogin, signOutTlmc } from '@/service/tlmcAuth'
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from '@/shortcuts'
 import { useAppData, useAppStore } from '@/store/app.store'
 import { isMacOS } from '@/utils/desktop'
 
 export function UserDropdown() {
-  const { username, url, lockUser } = useAppData()
+  const { username, url, lockUser, tlmcAuth } = useAppData()
   const setLogoutDialogState = useAppStore(
     (state) => state.actions.setLogoutDialogState,
   )
@@ -53,12 +54,26 @@ export function UserDropdown() {
         <DropdownMenuContent align={alignPosition} className="min-w-64">
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-2">
-              <p className="text-sm font-medium leading-none">{username}</p>
+              <p className="text-sm font-medium leading-none">
+                {tlmcAuth ? tlmcAuth.displayName : username}
+              </p>
               <p className="text-xs leading-none text-muted-foreground">
                 {url}
               </p>
             </div>
           </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {tlmcAuth ? (
+            <DropdownMenuItem onClick={() => signOutTlmc()}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>{t('account.signOut')}</span>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={() => beginTlmcLogin()}>
+              <LogIn className="mr-2 h-4 w-4" />
+              <span>{t('account.signIn')}</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
             <Keyboard className="mr-2 h-4 w-4" />

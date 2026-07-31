@@ -14,17 +14,22 @@ import '@/i18n'
 import App from '@/App'
 
 import { queryClient } from '@/lib/queryClient'
+import { completeTlmcLoginIfCallback } from '@/service/tlmcAuth'
 import { blockFeatures } from '@/utils/browser'
 
 blockFeatures()
 
-createRoot(document.getElementById('root') as HTMLElement).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
-)
+// Resolves instantly unless the URL is a Keycloak callback; deferring render
+// until then keeps the router from ever seeing the one-shot ?code= query.
+completeTlmcLoginIfCallback().finally(() => {
+  createRoot(document.getElementById('root') as HTMLElement).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+})
 
 // Lazy-load CJK fonts off the critical path from Google Fonts.
 const cjkFontLink = document.createElement('link')

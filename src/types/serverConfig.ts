@@ -48,6 +48,15 @@ interface IAppPages {
   setHomeLoopEnabled: (value: boolean) => void
 }
 
+// A per-device Subsonic API key minted through the Keycloak OIDC flow
+// (service/tlmcAuth.ts). Present ⇒ /rest requests authenticate as this user
+// instead of the anonymous guest credentials.
+export interface ITlmcAuth {
+  apiKey: string
+  apiKeyId: string
+  displayName: string
+}
+
 export interface IAppData extends IServerConfig {
   authType: AuthType | null
   isServerConfigured: boolean
@@ -56,6 +65,7 @@ export interface IAppData extends IServerConfig {
   hideServer: boolean
   lockUser: boolean
   songCount: number | null
+  tlmcAuth: ITlmcAuth | null
 }
 
 export interface IAppActions {
@@ -66,6 +76,7 @@ export interface IAppActions {
   saveConfig: (data: IServerConfig) => Promise<boolean>
   removeConfig: () => void
   setLogoutDialogState: (value: boolean) => void
+  setTlmcAuth: (value: ITlmcAuth | null) => void
 }
 
 export interface IAppCommand {

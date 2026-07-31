@@ -859,5 +859,9 @@
       "clear": "Clear",
       "showAll": "Show all families"
     }
+  },
+  "account": {
+    "signIn": "Sign in",
+    "signOut": "Sign out"
   }
 }

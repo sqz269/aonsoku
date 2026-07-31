@@ -35,14 +35,24 @@ export function authQueryParams(
 }
 
 function queryParams() {
-  const { username, password, authType, protocolVersion } =
+  const { username, password, authType, protocolVersion, tlmcAuth } =
     useAppStore.getState().data
 
-  return {
-    ...authQueryParams(username, password, authType),
+  const base = {
     v: protocolVersion || '1.16.0',
     c: appName,
     f: 'json',
+  }
+
+  // A minted API key supersedes the guest credentials — the facade rejects
+  // requests carrying both mechanisms at once.
+  if (tlmcAuth) {
+    return { apiKey: tlmcAuth.apiKey, ...base }
+  }
+
+  return {
+    ...authQueryParams(username, password, authType),
+    ...base,
   }
 }
 

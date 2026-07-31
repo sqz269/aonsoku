@@ -53,6 +53,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
             hideServer: HIDE_SERVER ?? false,
             lockUser: hasValidConfig,
             songCount: null,
+            tlmcAuth: null,
           },
           accounts: {
             discord: {
@@ -372,6 +373,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 state.data.url = ''
                 state.data.username = ''
                 state.data.password = ''
+                state.data.tlmcAuth = null
                 state.data.authType = AuthType.TOKEN
                 state.data.protocolVersion = '1.16.0'
                 state.data.serverType = 'subsonic'
@@ -399,6 +401,11 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
             setLogoutDialogState: (value) => {
               set((state) => {
                 state.data.logoutDialogState = value
+              })
+            },
+            setTlmcAuth: (value) => {
+              set((state) => {
+                state.data.tlmcAuth = value
               })
             },
           },

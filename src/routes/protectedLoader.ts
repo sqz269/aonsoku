@@ -12,7 +12,17 @@ export async function protectedLoader() {
   if (hasNoUrl || hasNoToken || !isServerConfigured)
     return redirect(ROUTES.SERVER_CONFIG)
 
-  const isServerUp = await subsonic.ping.pingView()
+  let isServerUp = await subsonic.ping.pingView()
+
+  // A revoked or stale API key must degrade to the guest session, not brick
+  // the app into the server-config screen.
+  if (!isServerUp && useAppStore.getState().data.tlmcAuth) {
+    useAppStore.setState((state) => {
+      state.data.tlmcAuth = null
+    })
+    isServerUp = await subsonic.ping.pingView()
+  }
+
   if (!isServerUp) return redirect(ROUTES.SERVER_CONFIG)
 
   // Extensions are otherwise only captured at login time; refresh them in the
