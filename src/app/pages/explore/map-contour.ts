@@ -4,7 +4,12 @@ import { contours } from 'd3-contour'
 // would be silly; a histogram on a fixed grid plus a separable gaussian blur is
 // the same estimator, milliseconds fast, and plays perfectly with d3-contour.
 
-export const GRID = 192
+export const GRID = 256
+
+// A cell only counts toward the relative field if the circle itself put about
+// this many points of mass there — kernel bleed into a near-empty pocket
+// otherwise contours regions where the circle has literally zero tracks.
+const MIN_OWN_POINTS = 2
 
 export interface ContourSet {
   /** MultiPolygon rings in data space ([-1, 1] map coordinates). */
@@ -89,12 +94,21 @@ export function buildCircleContours(
       global = blur(histogram(x, y, null), sigma)
       globalFieldCache.set(sigma, global)
     }
-    const floor = 0.02 * Math.max(...global)
+    let globalMax = 0
+    for (const v of global) if (v > globalMax) globalMax = v
+    const globalFloor = 0.02 * globalMax
+    // Peak cell value of one point after a normalized 2D gaussian blur.
+    const ownFloor = MIN_OWN_POINTS / (2 * Math.PI * sigma * sigma)
     const ratio = new Float32Array(GRID * GRID)
     for (let i = 0; i < ratio.length; i++) {
-      ratio[i] = global[i] > floor ? field[i] / global[i] : 0
+      ratio[i] =
+        global[i] > globalFloor && field[i] >= ownFloor
+          ? field[i] / global[i]
+          : 0
     }
-    field = ratio
+    // The division and the mask cuts both leave hard edges the first blur had
+    // already smoothed away — soften them again or the contours go jagged.
+    field = blur(ratio, 1.2)
   }
 
   // Two tail problems meet here: the blur smears a whisper of density

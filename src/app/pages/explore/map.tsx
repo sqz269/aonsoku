@@ -90,7 +90,7 @@ export default function ExploreMapPage() {
   const [plotReady, setPlotReady] = useState(false)
   const [circleQuery, setCircleQuery] = useState('')
   const [selectedCircle, setSelectedCircle] = useState<number | null>(null)
-  const [bandwidth, setBandwidth] = useState(3)
+  const [bandwidth, setBandwidth] = useState(4)
   const [relative, setRelative] = useState(true)
 
   const { data: map, isLoading } = useQuery({
@@ -157,6 +157,7 @@ export default function ExploreMapPage() {
       ctx.fillStyle = `rgba(${rgb}, ${0.03 + 0.07 * strength})`
       ctx.strokeStyle = `rgba(${rgb}, ${0.3 + 0.5 * strength})`
       ctx.lineWidth = level === set.polygons.length - 1 ? 1.5 : 1
+      ctx.lineJoin = 'round'
       ctx.fill()
       ctx.stroke()
     })
@@ -510,8 +511,8 @@ export default function ExploreMapPage() {
                   {t('explore.map.smoothing')}
                   <input
                     type="range"
-                    min={1.5}
-                    max={8}
+                    min={2}
+                    max={10}
                     step={0.5}
                     value={bandwidth}
                     onChange={(event) =>
