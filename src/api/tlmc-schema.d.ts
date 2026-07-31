@@ -2519,17 +2519,26 @@ export interface components {
             has_media?: boolean;
             has_lyrics?: boolean;
         };
+        TrackMapCircleDto: {
+            /** @example cir_00000000000000000000000000 */
+            id?: string;
+            name?: string | null;
+            /** Format: int32 */
+            count?: number;
+        };
         TrackMapResponseDto: {
             /** Format: int32 */
             count?: number;
             model?: string | null;
             works?: components["schemas"]["TrackMapWorkDto"][] | null;
+            circles?: components["schemas"]["TrackMapCircleDto"][] | null;
             ids?: string[] | null;
             x?: number[] | null;
             y?: number[] | null;
             cluster?: number[] | null;
             year?: number[] | null;
             work?: number[] | null;
+            circle?: number[] | null;
         };
         TrackMapWorkDto: {
             /** @example work_00000000000000000000000000 */
