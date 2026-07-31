@@ -17,6 +17,7 @@ const SOURCE_MAP: Record<string, string> = {
   radio: 'radio',
   map: 'map',
   search: 'search',
+  recommended: 'recommended',
 }
 
 export function nativeReportingActive() {

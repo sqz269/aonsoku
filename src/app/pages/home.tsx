@@ -3,6 +3,7 @@ import { Explore } from '@/app/components/home/explore'
 import { MostPlayed } from '@/app/components/home/most-played'
 import { RecentlyAdded } from '@/app/components/home/recently-added'
 import { RecentlyPlayed } from '@/app/components/home/recently-played'
+import { RecommendationRows } from '@/app/components/home/recommendation-rows'
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
       <HomeHeader />
 
       <div className="px-8 pb-6">
+        <RecommendationRows />
         <RecentlyPlayed />
         <MostPlayed />
         <RecentlyAdded />

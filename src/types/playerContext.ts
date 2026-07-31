@@ -29,6 +29,7 @@ export type PlaybackSourceType =
   | 'radio'
   | 'map'
   | 'search'
+  | 'recommended'
 
 export type PlaybackSource = {
   type: PlaybackSourceType

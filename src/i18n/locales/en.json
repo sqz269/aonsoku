@@ -3,7 +3,15 @@
     "recentlyPlayed": "Recently played",
     "mostPlayed": "Most played",
     "recentlyAdded": "Recently added",
-    "explore": "Explore"
+    "explore": "Explore",
+    "recs": {
+      "because": "Because you played {{name}}",
+      "arrangements": "More takes on tunes you love",
+      "territory": "In your territory",
+      "rediscover": "Rediscover",
+      "family": "{{name}} for you",
+      "generic": "For you"
+    }
   },
   "sidebar": {
     "home": "Home",
