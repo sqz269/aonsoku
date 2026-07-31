@@ -159,6 +159,7 @@ export default function ExploreMapPage() {
   }, [hasSize])
 
   // (Re)draw whenever the data or the coloring lens changes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
     if (!scatterplot || !map?.x?.length) return
@@ -205,6 +206,7 @@ export default function ExploreMapPage() {
   }, [theme, plotReady])
 
   // Click = sound. A lasso hands the region to the action bar instead.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
     if (!scatterplot) return
