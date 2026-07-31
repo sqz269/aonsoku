@@ -848,6 +848,8 @@
       "tileSubtitle": "Every track as one point — closer sounds alike. Click anywhere and listen.",
       "hint": "Click a point to hear it. Shift-drag or long-press to lasso a region into a queue.",
       "searchCircle": "Compare a circle…",
+      "contour": "Contours",
+      "highlight": "Highlight",
       "smoothing": "Smoothing",
       "relativeDensity": "Relative to library",
       "loading": "Loading the library…",

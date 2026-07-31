@@ -20,9 +20,17 @@ type Scatterplot = ReturnType<typeof createScatterplot>
 
 const QUEUE_CAP = 30
 
-// One slot color per overlaid circle contour, chosen to stay tellable-apart
-// when territories overlap. Slot count caps how many circles can be compared.
-const CONTOUR_COLORS = [
+// One slot color per overlaid circle, chosen to stay tellable-apart when
+// territories overlap. Slot count caps how many circles can be compared.
+const SLOT_COLORS_HEX = [
+  '#38bdf8',
+  '#f472b6',
+  '#facc15',
+  '#4ade80',
+  '#c4b5fd',
+  '#fb923c',
+]
+const SLOT_COLORS_RGB = [
   '56, 189, 248',
   '244, 114, 182',
   '250, 204, 21',
@@ -30,6 +38,9 @@ const CONTOUR_COLORS = [
   '196, 181, 253',
   '251, 146, 60',
 ]
+
+// Everything that is not a highlighted circle's point, in highlight mode.
+const HIGHLIGHT_DIM = '#33333d'
 
 function hslToHex(h: number, s: number, l: number): string {
   const sat = s / 100
@@ -94,6 +105,9 @@ export default function ExploreMapPage() {
   )
   const [bandwidth, setBandwidth] = useState(4)
   const [relative, setRelative] = useState(true)
+  const [circleDisplay, setCircleDisplay] = useState<'contour' | 'highlight'>(
+    'contour',
+  )
 
   const { data: map, isLoading } = useQuery({
     queryKey: ['tlmc-track-map'],
@@ -233,23 +247,55 @@ export default function ExploreMapPage() {
     }
   }, [hasSize, drawOverlay])
 
-  // (Re)draw whenever the data changes; points always color by sound family.
+  // (Re)draw whenever the data changes. Points color by sound family — except
+  // in highlight mode, where the chosen circles' own points wear their slot
+  // colors at a larger size and everything else recedes to a dim ground.
   // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
     if (!scatterplot || !map?.x?.length) return
 
-    const { x, y, cluster = [] } = map
+    const { x, y, cluster = [], circle = [] } = map
+    const highlighting =
+      circleDisplay === 'highlight' && selectedCircles.length > 0
+
+    if (highlighting) {
+      const slotByCircle = new Map(
+        selectedCircles.map((s) => [s.circle, s.color]),
+      )
+      const valueA = new Array<number>(circle.length)
+      const valueB = new Array<number>(circle.length)
+      for (let i = 0; i < circle.length; i++) {
+        const slot = slotByCircle.get(circle[i])
+        valueA[i] = slot != null ? slot + 1 : 0
+        valueB[i] = slot != null ? 1 : 0
+      }
+      scatterplot.set({
+        colorBy: 'valueA',
+        pointColor: [HIGHLIGHT_DIM, ...SLOT_COLORS_HEX],
+        sizeBy: 'valueB',
+        pointSize: [1.75, 4],
+      })
+      scatterplot.draw(
+        { x: x ?? [], y: y ?? [], valueA, valueB },
+        { transition: false },
+      )
+      return
+    }
+
     const top = cluster.reduce((acc, c) => Math.max(acc, c), 0)
     const valueA = cluster.map((c) => c + 1)
-    const palette = [UNKNOWN_COLOR, ...categoricalPalette(top + 1)]
-
-    scatterplot.set({ colorBy: 'valueA', pointColor: palette })
+    scatterplot.set({
+      colorBy: 'valueA',
+      pointColor: [UNKNOWN_COLOR, ...categoricalPalette(top + 1)],
+      sizeBy: null,
+      pointSize: 1.75,
+    })
     scatterplot.draw(
       { x: x ?? [], y: y ?? [], valueA },
       { transition: false },
     )
-  }, [map, plotReady])
+  }, [map, plotReady, selectedCircles, circleDisplay])
 
   // Match whatever the active theme paints behind the app — parsing the
   // computed color beats hardcoding a light/dark split across ~20 themes.
@@ -296,7 +342,7 @@ export default function ExploreMapPage() {
 
   function addCircle(index: number) {
     setSelectedCircles((current) => {
-      if (current.length >= CONTOUR_COLORS.length) return current
+      if (current.length >= SLOT_COLORS_HEX.length) return current
       const used = new Set(current.map((s) => s.color))
       let color = 0
       while (used.has(color)) color++
@@ -309,8 +355,10 @@ export default function ExploreMapPage() {
   }
 
   // Contours track the picked circles and their density controls; geometry
-  // lives in data space so pan/zoom only ever re-projects.
+  // lives in data space so pan/zoom only ever re-projects. Highlight mode
+  // shows the circles' literal points instead, so no geometry is built.
   const contourSets = useMemo(() => {
+    if (circleDisplay !== 'contour') return []
     if (!map?.x || !map?.y || selectedCircles.length === 0) return []
     const circle = map.circle ?? []
     const byCircle = new Map<number, number[]>(
@@ -325,11 +373,11 @@ export default function ExploreMapPage() {
       return [
         {
           set: buildCircleContours(map.x!, map.y!, indices, bandwidth, relative),
-          rgb: CONTOUR_COLORS[color],
+          rgb: SLOT_COLORS_RGB[color],
         },
       ]
     })
-  }, [map, selectedCircles, bandwidth, relative])
+  }, [map, selectedCircles, bandwidth, relative, circleDisplay])
 
   useEffect(() => {
     contoursRef.current = contourSets
@@ -491,7 +539,7 @@ export default function ExploreMapPage() {
                 >
                   <span
                     className="size-2.5 flex-none rounded-full"
-                    style={{ backgroundColor: `rgb(${CONTOUR_COLORS[color]})` }}
+                    style={{ backgroundColor: SLOT_COLORS_HEX[color] }}
                   />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">
                     {entry.name}
@@ -510,7 +558,7 @@ export default function ExploreMapPage() {
               )
             })}
 
-            {selectedCircles.length < CONTOUR_COLORS.length && (
+            {selectedCircles.length < SLOT_COLORS_HEX.length && (
               <div className="relative mt-1">
                 <input
                   value={circleQuery}
@@ -545,29 +593,46 @@ export default function ExploreMapPage() {
 
             {selectedCircles.length > 0 && (
               <div className="mt-2 flex flex-col gap-1.5">
-                <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  {t('explore.map.smoothing')}
-                  <input
-                    type="range"
-                    min={2}
-                    max={10}
-                    step={0.5}
-                    value={bandwidth}
-                    onChange={(event) =>
-                      setBandwidth(Number(event.target.value))
-                    }
-                    className="w-32 accent-primary"
-                  />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-2 text-xs text-muted-foreground">
-                  {t('explore.map.relativeDensity')}
-                  <input
-                    type="checkbox"
-                    checked={relative}
-                    onChange={(event) => setRelative(event.target.checked)}
-                    className="accent-primary"
-                  />
-                </label>
+                <div className="flex gap-1">
+                  {(['contour', 'highlight'] as const).map((mode) => (
+                    <Button
+                      key={mode}
+                      size="sm"
+                      variant={circleDisplay === mode ? 'default' : 'secondary'}
+                      className="h-6 px-2 text-xs"
+                      onClick={() => setCircleDisplay(mode)}
+                    >
+                      {t(`explore.map.${mode}`)}
+                    </Button>
+                  ))}
+                </div>
+                {circleDisplay === 'contour' && (
+                  <>
+                    <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                      {t('explore.map.smoothing')}
+                      <input
+                        type="range"
+                        min={2}
+                        max={10}
+                        step={0.5}
+                        value={bandwidth}
+                        onChange={(event) =>
+                          setBandwidth(Number(event.target.value))
+                        }
+                        className="w-32 accent-primary"
+                      />
+                    </label>
+                    <label className="flex cursor-pointer items-center justify-between gap-2 text-xs text-muted-foreground">
+                      {t('explore.map.relativeDensity')}
+                      <input
+                        type="checkbox"
+                        checked={relative}
+                        onChange={(event) => setRelative(event.target.checked)}
+                        className="accent-primary"
+                      />
+                    </label>
+                  </>
+                )}
               </div>
             )}
           </div>
