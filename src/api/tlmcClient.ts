@@ -31,12 +31,19 @@ async function getTrack(id: string) {
   return data
 }
 
+// Bump when a reloaded layout must reach clients before the daily bucket rolls.
+const MAP_CACHE_EPOCH = 2
+
 // ~10MB of parallel arrays for the whole library — fetch once, cache forever.
 // The v token buckets the CDN cache by UTC day so a stale edge entry (or an
 // ETL reload) never pins yesterday's map for longer than that.
 async function getTrackMap() {
   const { data } = await client().GET('/api/music/track/map', {
-    params: { query: { v: new Date().toISOString().slice(0, 10) } },
+    params: {
+      query: {
+        v: `${MAP_CACHE_EPOCH}-${new Date().toISOString().slice(0, 10)}`,
+      },
+    },
   })
   return data
 }

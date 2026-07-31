@@ -73,6 +73,8 @@ export default function ExploreMapPage() {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   const [cursor, setCursor] = useState({ x: 0, y: 0 })
   const [pending, setPending] = useState(false)
+  const [viewportHeight, setViewportHeight] = useState(0)
+  const [plotReady, setPlotReady] = useState(false)
 
   const { data: map, isLoading } = useQuery({
     queryKey: ['tlmc-track-map'],
@@ -104,36 +106,57 @@ export default function ExploreMapPage() {
     [map, playSong],
   )
 
+  // The route renders inside the main scroll area, whose Radix viewport sizes
+  // children by content — h-full collapses to 0 there, and a 0-height canvas
+  // makes regl-scatterplot's projection matrix singular (it crashes). Mirror
+  // the scroll area's height onto the container explicitly instead.
+  useEffect(() => {
+    const scrollArea = document.getElementById('main-scroll-area')
+    if (!scrollArea) return
+
+    const update = () => setViewportHeight(scrollArea.clientHeight)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(scrollArea)
+    return () => observer.disconnect()
+  }, [])
+
+  const hasSize = viewportHeight > 0
+
   useEffect(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
-    if (!canvas || !container) return
+    if (!canvas || !container || !hasSize) return
 
     const { width, height } = container.getBoundingClientRect()
     const scatterplot = createScatterplot({
       canvas,
-      width,
-      height,
+      width: Math.max(1, width),
+      height: Math.max(1, height),
       pointSize: 1.75,
       opacityBy: 'density',
       lassoInitiator: true,
       lassoOnLongPress: true,
-      keyMap: { shift: 'lasso' },
+      actionKeyMap: { shift: 'lasso' },
     })
     scatterplotRef.current = scatterplot
+    setPlotReady(true)
 
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect
-      if (rect) scatterplot.set({ width: rect.width, height: rect.height })
+      if (rect && rect.width > 0 && rect.height > 0) {
+        scatterplot.set({ width: rect.width, height: rect.height })
+      }
     })
     observer.observe(container)
 
     return () => {
       observer.disconnect()
       scatterplotRef.current = null
+      setPlotReady(false)
       scatterplot.destroy()
     }
-  }, [])
+  }, [hasSize])
 
   // (Re)draw whenever the data or the coloring lens changes.
   useEffect(() => {
@@ -164,7 +187,7 @@ export default function ExploreMapPage() {
       { x: x ?? [], y: y ?? [], valueA },
       { transition: false },
     )
-  }, [map, colorMode])
+  }, [map, colorMode, plotReady])
 
   // Match whatever the active theme paints behind the app — parsing the
   // computed color beats hardcoding a light/dark split across ~20 themes.
@@ -179,7 +202,7 @@ export default function ExploreMapPage() {
         backgroundColor: [channels[0], channels[1], channels[2], 1],
       })
     }
-  }, [theme])
+  }, [theme, plotReady])
 
   // Click = sound. A lasso hands the region to the action bar instead.
   useEffect(() => {
@@ -214,7 +237,7 @@ export default function ExploreMapPage() {
       scatterplot.unsubscribe('pointOver', onPointOver)
       scatterplot.unsubscribe('pointOut', onPointOut)
     }
-  }, [playOne])
+  }, [playOne, plotReady])
 
   async function playSelection() {
     if (!map?.ids || selection.length === 0) return
@@ -251,7 +274,8 @@ export default function ExploreMapPage() {
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden"
+      className="relative w-full overflow-hidden"
+      style={{ height: viewportHeight || undefined }}
       onMouseMove={(event) => {
         if (hoverIndex == null) return
         const rect = containerRef.current?.getBoundingClientRect()
