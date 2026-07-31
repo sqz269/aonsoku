@@ -356,6 +356,7 @@ export default function ExploreMapPage() {
     }
   }, [colorMode, activeClusters])
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: plotReady re-runs this once the late-initialized plot exists
   useEffect(() => {
     const scatterplot = scatterplotRef.current
     if (!scatterplot || !map?.cluster) return
