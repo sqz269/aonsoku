@@ -14,10 +14,12 @@ import '@/i18n'
 import App from '@/App'
 
 import { queryClient } from '@/lib/queryClient'
+import { initAdaptiveRadio } from '@/service/adaptiveRadio'
 import { completeTlmcLoginIfCallback } from '@/service/tlmcAuth'
 import { blockFeatures } from '@/utils/browser'
 
 blockFeatures()
+initAdaptiveRadio()
 
 // Resolves instantly unless the URL is a Keycloak callback; deferring render
 // until then keeps the router from ever seeing the one-shot ?code= query.

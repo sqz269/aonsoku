@@ -32,7 +32,34 @@ export function toPlaySource(
   return shuffled ? 'shuffle' : 'unknown'
 }
 
-export function reportPlay(trackId: string, msPlayed: number, source: string) {
+// This session's listen ratios, newest last — the adaptive radio reads these
+// to steer (service/adaptiveRadio.ts). In-memory only: a reload starts a new
+// session, which matches how the radio itself scopes its feedback.
+export interface SessionJudgment {
+  trackId: string
+  ratio: number
+}
+
+const sessionJudgments: SessionJudgment[] = []
+
+export function getSessionJudgments(): readonly SessionJudgment[] {
+  return sessionJudgments
+}
+
+export function reportPlay(
+  trackId: string,
+  msPlayed: number,
+  source: string,
+  durationSec?: number,
+) {
+  if (trackId && durationSec && durationSec > 0 && msPlayed >= 1000) {
+    sessionJudgments.push({
+      trackId,
+      ratio: Math.min(msPlayed / 1000 / durationSec, 1),
+    })
+    if (sessionJudgments.length > 200) sessionJudgments.shift()
+  }
+
   const { url, tlmcAuth } = useAppStore.getState().data
   // Sub-second listens are noise, not plays.
   if (!tlmcAuth || !trackId || msPlayed < 1000) return

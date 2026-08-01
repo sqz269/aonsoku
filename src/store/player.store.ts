@@ -323,6 +323,21 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 get().actions.setPlayingState(true)
               }
             },
+            appendToQueue: (list) => {
+              // Unlike setLastOnQueue this keeps playbackContext intact — the
+              // adaptive radio extends its own queue and must stay a radio.
+              const { currentList, originalList } = get().songlist
+              const currentListIds = new Set(currentList.map((song) => song.id))
+              const uniqueList = list.filter(
+                (song) => !currentListIds.has(song.id),
+              )
+              if (uniqueList.length === 0) return
+
+              set((state) => {
+                state.songlist.currentList = [...currentList, ...uniqueList]
+                state.songlist.originalList = [...originalList, ...uniqueList]
+              })
+            },
             setLastOnQueue: (list) => {
               const { currentList, originalList } = get().songlist
 
@@ -889,6 +904,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     playerState.playbackContext.source,
                     playerState.isShuffleActive,
                   ),
+                  songlist.currentSong.duration,
                 )
               }
               set((state) => {
