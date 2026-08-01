@@ -72,23 +72,10 @@ button {
   height: 3px !important;
 }
 
+/* Text stays selectable so names can be copied; the app-like feel is not
+   worth losing copy/paste (fork decision). */
 #root {
-  @apply select-none cursor-default;
-}
-
-div,
-p,
-span,
-small,
-h1,
-h2,
-h3,
-h4,
-h5 {
-  user-select: none;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
+  @apply cursor-default;
 }
 
 input,

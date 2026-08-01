@@ -19,20 +19,6 @@ export const hasPiPSupport = isDesktop()
   ? false
   : 'documentPictureInPicture' in window
 
-function preventContextMenu() {
-  document.addEventListener('contextmenu', (e) => {
-    if (
-      e.target instanceof HTMLInputElement ||
-      e.target instanceof HTMLTextAreaElement ||
-      e.target instanceof HTMLSelectElement
-    ) {
-      return
-    }
-
-    e.preventDefault()
-  })
-}
-
 function isAnyModifierKeyPressed(e: MouseEvent) {
   return e.ctrlKey || e.metaKey || e.shiftKey || e.altKey
 }
@@ -124,7 +110,8 @@ export function blockFeatures() {
 
   if (isDev) return
 
-  preventContextMenu()
+  // preventContextMenu deliberately not called: the fork keeps the browser's
+  // context menu so text (circle names, titles) can be copied.
   preventNewTabAndScroll()
   preventReload()
   preventAltBehaviour()
